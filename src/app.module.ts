@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CommentsModule } from './modules/comments/comments.module';
+import { AuthModule } from './modules/auth/auth.module'
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -19,7 +20,7 @@ import { ConfigModule } from '@nestjs/config';
         uri: process.env.MONGO_CONNECTION,
       })
     }),
-   
+    AuthModule,
     CommentsModule
   ],
   controllers: [AppController],

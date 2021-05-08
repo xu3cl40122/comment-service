@@ -1,4 +1,5 @@
 import { CommentsService } from './comments.service';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 import {
   Controller,
   Get,
@@ -31,25 +32,42 @@ export class CommentsController {
   }
 
   @Put('/:comment_id')
-  async updateComment(@Param('comment_id') comment_id, @Body() body): Promise<Object> {
+  @UseGuards(JwtAuthGuard)
+  async updateComment(@Req() req, @Param('comment_id') comment_id, @Body() body): Promise<Object> {
+    let user_id = req.payload.user_id
     let comment = await this.commentsService.findCommentById(comment_id);
     if (!comment)
       throw new HttpException('comment not found', HttpStatus.BAD_REQUEST)
+    if (!comment.created_by !== user_id)
+      throw new HttpException('only creater can update', HttpStatus.FORBIDDEN)
     return await this.commentsService.updateComment(comment_id, body);
   }
 
   @Delete('/:comment_id')
-  async deleteComment(@Param('comment_id') comment_id,): Promise<Object> {
+  @UseGuards(JwtAuthGuard)
+  async deleteComment(@Req() req, @Param('comment_id') comment_id,): Promise<Object> {
+    let user_id = req.payload.user_id
+    let comment = await this.commentsService.findCommentById(comment_id);
+    if (!comment)
+      throw new HttpException('comment not found', HttpStatus.BAD_REQUEST)
+    if (!comment.created_by !== user_id)
+      throw new HttpException('only creater can delete', HttpStatus.FORBIDDEN)
     return await this.commentsService.deleteComment(comment_id);
   }
 
   @Post()
-  async addComment(@Body() body): Promise<Object> {
+  @UseGuards(JwtAuthGuard)
+  async addComment(@Req() req, @Body() body): Promise<Object> {
+    let user_id = req.payload.user_id
+    body.created_by = user_id
     return await this.commentsService.addComment(body);
   }
 
   @Post('/:comment_id/reply')
-  async addReply(@Param('comment_id') comment_id, @Body() body): Promise<Object> {
+  @UseGuards(JwtAuthGuard)
+  async addReply(@Req() req, @Param('comment_id') comment_id, @Body() body): Promise<Object> {
+    let user_id = req.payload.user_id
+    body.created_by = user_id
     return await this.commentsService.addReply(comment_id, body)
       .catch(err => {
         if (err.kind === 'ObjectId')
@@ -59,7 +77,12 @@ export class CommentsController {
   }
 
   @Put('/:comment_id/reply/:reply_id')
-  async updateReply(@Param('comment_id') comment_id, @Param('reply_id') reply_id, @Body() body): Promise<Object> {
+  @UseGuards(JwtAuthGuard)
+  async updateReply(@Req() req, @Param('comment_id') comment_id, @Param('reply_id') reply_id, @Body() body): Promise<Object> {
+    let user_id = req.payload.user_id
+    let reply = await this.commentsService.findReplyById(comment_id, reply_id)
+    if (reply.created_by !== user_id)
+      throw new HttpException('only creater can update', HttpStatus.FORBIDDEN)
     return await this.commentsService.updateReply(comment_id, reply_id, body).catch(err => {
       if (err.kind === 'ObjectId')
         throw new HttpException('reply not found', HttpStatus.BAD_REQUEST)

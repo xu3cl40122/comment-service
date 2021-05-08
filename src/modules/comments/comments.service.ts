@@ -66,6 +66,12 @@ export class CommentsService {
     return this.commentModel.findById(comment_id)
   }
 
+  async findReplyById(comment_id: string, reply_id: string): Promise<Reply> {
+    let comment = await this.commentModel.findOne({ _id: comment_id, 'replies._id': reply_id })
+    let reply = comment.replies.find(d => d._id.toString() === reply_id)
+    return reply
+  }
+
   async addReply(comment_id: string, body: Reply): Promise<Comment> {
     return this.commentModel.findByIdAndUpdate(comment_id, { $push: { replies: body } }, { new: true })
   }
