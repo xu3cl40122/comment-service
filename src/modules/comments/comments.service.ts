@@ -31,8 +31,35 @@ export class CommentsService {
     }, { new: true })
   }
 
-  async findComments(): Promise<Comment[]> {
-    return this.commentModel.find().exec();
+  async findComments(query: { page?, size?, target_id?: string, created_by?: string }): Promise<Object> {
+    let [page, size] = [Number(query.page ?? 0), Number(query.size ?? 10)]
+
+    let { target_id, created_by } = query
+    let where: any = {
+      deleted: false
+    }
+    if (target_id)
+      where.target_id = target_id
+    if (created_by)
+      where.created_by = created_by
+
+    let [content, total] = await Promise.all([
+      this.commentModel.find(where, null, {
+        limit: size,
+        skip: page * size,
+      }).exec(),
+      this.commentModel.countDocuments(where)
+    ])
+
+    let totalPage = Math.ceil(total / size)
+
+    return {
+      content,
+      page,
+      size,
+      total,
+      totalPage
+    }
   }
 
   async findCommentById(comment_id: string): Promise<Comment> {
