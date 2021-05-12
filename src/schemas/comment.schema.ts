@@ -17,14 +17,21 @@ export class Comment {
 
   @Prop(raw([{
     content: { type: String },
-    created_by: { type: String },
+    creator_id: { type: String },
+    creator_display_name: { type: String },
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
   }]))
   replies: Reply[];
 
   @Prop()
-  created_by: string;
+  creator_id: string;
+
+  @Prop()
+  creator_display_name: string;
+
+  @Prop()
+  tag: string;
 
   @Prop({ type: Date, default: Date.now })
   edited_at: Date;
@@ -39,7 +46,8 @@ export const CommentSchema = SchemaFactory.createForClass(Comment);
 export class Reply {
   _id: string;
   content: string;
-  created_by: string;
+  creator_id: string;
+  creator_display_name: string;
   created_at: Date;
   updated_at: Date;
 }

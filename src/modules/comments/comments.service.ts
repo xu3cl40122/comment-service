@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Comment, CommentDocument, Reply } from '../../schemas/comment.schema';
 
@@ -18,6 +18,8 @@ export class CommentsService {
       $set: {
         content: body.content,
         rank: body.rank,
+        tag: body.tag,
+        creator_display_name: body.creator_display_name,
         edited_at: new Date()
       }
     }, { new: true })
@@ -31,17 +33,19 @@ export class CommentsService {
     }, { new: true })
   }
 
-  async findComments(query: { page?, size?, target_id?: string, created_by?: string }): Promise<Object> {
+  async findComments(query: { page?, size?, target_id?: string, tag?: string, creator_id?: string }): Promise<Object> {
     let [page, size] = [Number(query.page ?? 0), Number(query.size ?? 10)]
 
-    let { target_id, created_by } = query
+    let { target_id, creator_id, tag } = query
     let where: any = {
       deleted: false
     }
     if (target_id)
       where.target_id = target_id
-    if (created_by)
-      where.created_by = created_by
+    if (creator_id)
+      where.creator_id = creator_id
+    if (tag)
+      where.tag = tag
 
     let [content, total] = await Promise.all([
       this.commentModel.find(where, null, {
@@ -81,6 +85,13 @@ export class CommentsService {
       { _id: comment_id, "replies._id": reply_id },
       { $set: { 'replies.$.content': body.content, 'replies.$.updated_at': new Date() } },
       { new: true }
+    )
+  }
+
+  async deleteReply(comment_id: string, reply_id: string): Promise<Object> {
+    return this.commentModel.updateOne(
+      { _id: comment_id, },
+      { $pull: { 'replies': { '_id': reply_id } } }
     )
   }
 }
