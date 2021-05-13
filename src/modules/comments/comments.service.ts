@@ -70,6 +70,35 @@ export class CommentsService {
     return this.commentModel.findById(comment_id)
   }
 
+  async getStatistics(query: { target_id?: string, tag?: string, }): Promise<Object> {
+    let { target_id, tag } = query
+    let condition: any = { 'deleted': false }
+    if (target_id)
+      condition['target_id'] = target_id
+    if (tag)
+      condition['tag'] = tag
+    let total = await this.commentModel.countDocuments(condition)
+    let resArr = await this.commentModel.aggregate(
+      [
+        { "$match": condition },
+        {
+          $group:
+          {
+            "_id": "_id",
+            avg_rank: { $avg: "$rank" },
+          }
+
+        }
+      ]
+    )
+
+    await Promise.all([resArr, total])
+    return {
+      total,
+      avgRank: resArr?.[0]?.avg_rank ?? ''
+    }
+  }
+
   async findReplyById(comment_id: string, reply_id: string): Promise<Reply> {
     let comment = await this.commentModel.findOne({ _id: comment_id, 'replies._id': reply_id })
     let reply = comment.replies.find(d => d._id.toString() === reply_id)
@@ -83,7 +112,13 @@ export class CommentsService {
   async updateReply(comment_id: string, reply_id: string, body: Reply): Promise<Object> {
     return this.commentModel.updateOne(
       { _id: comment_id, "replies._id": reply_id },
-      { $set: { 'replies.$.content': body.content, 'replies.$.updated_at': new Date() } },
+      {
+        $set: {
+          'replies.$.content': body.content,
+          'replies.$.creator_display_name': body.creator_display_name,
+          'replies.$.updated_at': new Date(),
+        }
+      },
       { new: true }
     )
   }

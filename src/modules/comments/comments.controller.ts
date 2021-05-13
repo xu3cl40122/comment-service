@@ -23,6 +23,11 @@ export class CommentsController {
     return await this.commentsService.findComments(query);
   }
 
+  @Get('/statistics')
+  async getStatistics(@Query() query): Promise<Object> {
+    return await this.commentsService.getStatistics(query);
+  }
+
   @Get('/:comment_id')
   async getCommentById(@Param('comment_id') comment_id): Promise<Object> {
     let comment = await this.commentsService.findCommentById(comment_id);
