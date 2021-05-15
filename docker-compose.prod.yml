@@ -1,0 +1,30 @@
+version: "3.7"
+services:
+  comment_service:
+    container_name: comment_service
+    image: xu3cl40122/comment-service:latest
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - mongo_network
+    depends_on: 
+      - mongo
+    ports:
+      - 4000:3000
+    restart: unless-stopped
+    command: node dist/main
+
+  mongo:
+    container_name: mongodb
+    image: mongo
+    restart: always
+    env_file:
+      - db.env
+    ports: 
+      - "27017:27017"
+    networks:
+      - mongo_network
+
+networks:
+  mongo_network:
