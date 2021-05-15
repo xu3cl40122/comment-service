@@ -1,10 +1,11 @@
-FROM node:14-alpine
+FROM node:latest
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./  
+COPY ./package.json ./
 RUN npm install
 COPY ./ ./
-RUN npm run build 
+RUN npm run build
 
+# 指定執行dev script
 CMD ["node", "dist/main"]
