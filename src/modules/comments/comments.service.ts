@@ -2,18 +2,19 @@ import { Injectable } from '@nestjs/common';
 import { Model, ObjectId } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Comment, CommentDocument, Reply } from '../../schemas/comment.schema';
+import { CreateCommentDto, UpdateCommentDto , CreateReplyDto, UpdateReplyDto} from '../../dto/comment.dto'
 
 @Injectable()
 export class CommentsService {
   constructor(@InjectModel(Comment.name) private commentModel: Model<CommentDocument>) { }
 
-  async addComment(body: Comment): Promise<Comment> {
+  async addComment(body: CreateCommentDto): Promise<Comment> {
     const comment = new this.commentModel(body);
     return comment.save();
   }
 
   // 加 { new: true } 才會 return updated document
-  async updateComment(comment_id: string, body: Comment): Promise<Comment> {
+  async updateComment(comment_id: string, body: UpdateCommentDto): Promise<Comment> {
     return this.commentModel.findByIdAndUpdate(comment_id, {
       $set: {
         content: body.content,
@@ -105,11 +106,12 @@ export class CommentsService {
     return reply
   }
 
-  async addReply(comment_id: string, body: Reply): Promise<Comment> {
+  async addReply(comment_id: string, body: CreateReplyDto): Promise<Comment> {
+    // new true 才會 return 更新過的
     return this.commentModel.findByIdAndUpdate(comment_id, { $push: { replies: body } }, { new: true })
   }
 
-  async updateReply(comment_id: string, reply_id: string, body: Reply): Promise<Object> {
+  async updateReply(comment_id: string, reply_id: string, body: UpdateReplyDto): Promise<Object> {
     return this.commentModel.updateOne(
       { _id: comment_id, "replies._id": reply_id },
       {

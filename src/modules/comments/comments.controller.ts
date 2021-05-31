@@ -4,6 +4,7 @@ import { ApiOkResponse, ApiCreatedResponse, ApiHeader, ApiTags, ApiOperation, Ap
 import { getManyResponseFor } from '../../methods/spec'
 import { Comment } from '../../schemas/comment.schema'
 import { CommentQueryDto, StatisticsQueryDto } from '../../dto/query.dto'
+import { CreateCommentDto, UpdateCommentDto, CreateReplyDto, UpdateReplyDto } from '../../dto/comment.dto'
 import {
   Controller,
   Get,
@@ -58,7 +59,7 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({ type: Comment })
   @ApiHeader({ name: 'Authorization', description: 'JWT' })
-  async updateComment(@Req() req, @Param('comment_id') comment_id, @Body() body): Promise<Object> {
+  async updateComment(@Req() req, @Param('comment_id') comment_id, @Body() body: UpdateCommentDto): Promise<Object> {
     let user_id = req.payload.user_id
     let comment = await this.commentsService.findCommentById(comment_id);
     if (!comment)
@@ -87,7 +88,7 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({ type: Comment })
   @ApiHeader({ name: 'Authorization', description: 'JWT' })
-  async addComment(@Req() req, @Body() body): Promise<Object> {
+  async addComment(@Req() req, @Body() body: CreateCommentDto): Promise<Object> {
     let user_id = req.payload.user_id
     body.creator_id = user_id
     return await this.commentsService.addComment(body);
@@ -97,7 +98,7 @@ export class CommentsController {
   @ApiOperation({ summary: '新增回覆' })
   @UseGuards(JwtAuthGuard)
   @ApiCreatedResponse({ type: Comment })
-  async addReply(@Req() req, @Param('comment_id') comment_id, @Body() body): Promise<Object> {
+  async addReply(@Req() req, @Param('comment_id') comment_id, @Body() body: CreateReplyDto): Promise<Object> {
     let user_id = req.payload.user_id
     body.creator_id = user_id
     return await this.commentsService.addReply(comment_id, body)
@@ -112,7 +113,7 @@ export class CommentsController {
   @ApiOperation({ summary: '編輯回覆' })
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({ type: Comment })
-  async updateReply(@Req() req, @Param('comment_id') comment_id, @Param('reply_id') reply_id, @Body() body): Promise<Object> {
+  async updateReply(@Req() req, @Param('comment_id') comment_id, @Param('reply_id') reply_id, @Body() body: UpdateReplyDto): Promise<Object> {
     let user_id = req.payload.user_id
     let reply = await this.commentsService.findReplyById(comment_id, reply_id)
     if (reply.creator_id !== user_id)
