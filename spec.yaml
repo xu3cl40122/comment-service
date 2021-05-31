@@ -1,0 +1,307 @@
+openapi: 3.0.0
+info:
+  title: Comment Service API spec
+  description: ''
+  version: '1.0'
+  contact: {}
+tags: []
+servers: []
+components:
+  schemas:
+    Comment:
+      type: object
+      properties:
+        _id:
+          type: string
+        target_id:
+          type: string
+        content:
+          type: string
+        rank:
+          type: number
+        replies:
+          example:
+            - _id: 60b20b86d583140227ef642e
+              content: test3
+              creator_display_name: creator_display_name
+              creator_id: ec27f218-1f68-46e6-bc4d-d12b34c21fdf
+              created_at: '2021-05-29T09:38:14.226Z'
+              updated_at: '2021-05-29T09:38:14.226Z'
+          type: array
+          items:
+            type: string
+        creator_id:
+          type: string
+        creator_display_name:
+          type: string
+        tag:
+          type: string
+          description: 因為 creator_id 如果是 integer 很容易衝突，需要 tag 來區別是在評論什麼
+          example: gc-court
+        edited_at:
+          format: date-time
+          type: string
+        deleted:
+          type: boolean
+      required:
+        - _id
+        - target_id
+        - content
+        - rank
+        - replies
+        - creator_id
+        - creator_display_name
+        - tag
+        - edited_at
+        - deleted
+    GetManyResponseForComment:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        count:
+          type: number
+        size:
+          type: number
+          default: 10
+        total:
+          type: number
+        totalPage:
+          type: number
+      required:
+        - content
+        - count
+        - size
+        - total
+        - totalPage
+    UpdateCommentDto:
+      type: object
+      properties:
+        target_id:
+          type: string
+        content:
+          type: string
+        rank:
+          type: number
+        creator_display_name:
+          type: string
+        tag:
+          type: string
+    CreateCommentDto:
+      type: object
+      properties:
+        target_id:
+          type: string
+        content:
+          type: string
+        rank:
+          type: number
+        creator_display_name:
+          type: string
+        tag:
+          type: string
+      required:
+        - target_id
+        - content
+        - rank
+        - creator_display_name
+        - tag
+    CreateReplyDto:
+      type: object
+      properties:
+        content:
+          type: string
+        creator_display_name:
+          type: string
+      required:
+        - content
+        - creator_display_name
+    UpdateReplyDto:
+      type: object
+      properties:
+        content:
+          type: string
+        creator_display_name:
+          type: string
+paths:
+  /:
+    get:
+      operationId: AppController_getHello
+      parameters: []
+      responses:
+        '200':
+          description: ''
+  /comments:
+    get:
+      operationId: CommentsController_queryComments
+      summary: 查詢評論
+      parameters:
+        - name: page
+          required: false
+          in: query
+          schema:
+            type: number
+        - name: size
+          required: false
+          in: query
+          schema:
+            type: number
+        - name: order
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: sort_by
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: tag
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: created_by
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetManyResponseForComment'
+    post:
+      operationId: CommentsController_addComment
+      summary: 新增評論
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+  /comments/statistics:
+    get:
+      operationId: CommentsController_getStatistics
+      summary: 查詢 target 評論統計
+      parameters:
+        - name: tag
+          required: true
+          in: query
+          schema:
+            type: string
+        - name: target_id
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                example:
+                  total: 1
+                  avgRank: 2
+  '/comments/{comment_id}':
+    get:
+      operationId: CommentsController_getCommentById
+      summary: 查詢評論詳細資訊
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+    put:
+      operationId: CommentsController_updateComment
+      summary: 編輯評論
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCommentDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+    delete:
+      operationId: CommentsController_deleteComment
+      summary: 刪除評論
+      parameters: []
+      responses:
+        '200':
+          description: ''
+  '/comments/{comment_id}/reply':
+    post:
+      operationId: CommentsController_addReply
+      summary: 新增回覆
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReplyDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+  '/comments/{comment_id}/reply/{reply_id}':
+    put:
+      operationId: CommentsController_updateReply
+      summary: 編輯回覆
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReplyDto'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+    delete:
+      operationId: CommentsController_deleteReply
+      summary: 刪除回覆
+      parameters: []
+      responses:
+        '200':
+          description: ''
